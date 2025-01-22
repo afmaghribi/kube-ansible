@@ -1,0 +1,16 @@
+---
+# tasks file for roles/worker
+- name: Retrieve kubeadm join token
+  command: kubeadm token create --print-join-command
+  register: kubeadm_join_command
+  delegate_to: "{{ groups['master'][0] }}"
+  run_once: yes
+
+- name: Set kubeadm_join_command variable
+  set_fact:
+    kubeadm_join_command: "{{ kubeadm_join_command.stdout }}"
+
+- name: Join the worker node to the Kubernetes cluster
+  command: "{{ kubeadm_join_command }}"
+  register: join_result
+  ignore_errors: yes

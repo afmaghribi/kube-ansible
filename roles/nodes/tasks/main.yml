@@ -1,0 +1,15 @@
+---
+- name: Update and upgrade all packages
+  include_tasks: update_packages.yml
+
+- name: Disable swap
+  include_tasks: disable_swap.yml
+
+- name: Enable kernel module and configs
+  include_tasks: kernel_config.yml
+
+- name: Install containerd runtime
+  include_tasks: containerd_setup.yml
+
+- name: Install kubernetes packages
+  include_tasks: kubernetes_setup.yml

@@ -1,0 +1,31 @@
+---
+- name: Download Kubernetes GPG key
+  shell: >
+    curl -fsSL https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/Release.key | sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+  args:
+    executable: /bin/bash
+    creates: /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+
+- name: Add Kubernetes repository
+  apt_repository:
+    filename: kubernetes
+    repo: "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_version }}/deb/ /"
+    state: present
+
+- name: Install kubeadm, kubectl and kubelet
+  apt:
+    name: 
+    - kubeadm
+    - kubectl
+    - kubelet
+    state: present
+    update_cache: yes
+
+- name: Hold kubelet, kubeadm, and kubectl to prevent automatic upgrades
+  command: >
+    apt-mark hold {{ item }}
+  loop:
+    - kubeadm
+    - kubectl
+    - kubelet
+    

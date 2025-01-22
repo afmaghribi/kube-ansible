@@ -1,0 +1,51 @@
+---
+# tasks file for roles/master
+- name: Check if Kubernetes is already initialized
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kube_init_status
+
+- name: Initialize Kubernetes control plane (if not already initialized)
+  command: kubeadm init
+  when: not kube_init_status.stat.exists
+  register: kubeadm_init_output
+
+- name: Display kubeadm join command
+  debug:
+    msg: "{{ kubeadm_init_output.stdout }}"
+  when: not kube_init_status.stat.exists
+
+- name: Create .kube directory
+  file:
+    path: "{{ ansible_user_dir }}/.kube"
+    state: directory
+    mode: '0755'
+  when: not kube_init_status.stat.exists
+
+- name: Copy admin.conf to .kube/config
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: "{{ ansible_user_dir }}/.kube/config"
+    remote_src: yes
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_gid }}"
+    mode: '0600'
+  when: not kube_init_status.stat.exists
+
+- name: Set KUBECONFIG environment variable
+  lineinfile:
+    path: "{{ ansible_user_dir }}/.bashrc"
+    line: 'export KUBECONFIG={{ ansible_user_dir }}/.kube/config'
+    create: yes
+  when: not kube_init_status.stat.exists
+
+- name: Check if Kubernetes is already initialized
+  stat:
+    path: /etc/cni/net.d/10-calico.conflist
+  register: calico_cni_status
+
+- name: Apply pod network addon (e.g., Calico)
+  command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/calico.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  when: not calico_cni_status.stat.exists

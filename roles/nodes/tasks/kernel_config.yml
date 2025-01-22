@@ -1,0 +1,33 @@
+---
+- name: Create /etc/modules-load.d/containerd.conf
+  blockinfile:
+    path: /etc/modules-load.d/containerd.conf
+    block: |
+      overlay
+      br_netfilter
+    create: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Load kernel modules
+  shell: |
+    sudo modprobe overlay
+    sudo modprobe br_netfilter
+  args:
+    executable: /bin/bash
+
+- name: Create /etc/sysctl.d/kubernetes.conf
+  blockinfile:
+    path: /etc/sysctl.d/kubernetes.conf
+    block: |
+      net.bridge.bridge-nf-call-ip6tables = 1
+      net.bridge.bridge-nf-call-iptables = 1
+      net.ipv4.ip_forward = 1
+    create: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Apply systctl settings
+  command: sysctl --system

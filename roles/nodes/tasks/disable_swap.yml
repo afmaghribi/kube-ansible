@@ -1,0 +1,25 @@
+---
+- name: Disable swap immediately
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Get current date
+  command: date +%d-%m-%Y
+  register: current_date
+  changed_when: false
+
+- name: Create a backup of /etc/fstab with current date
+  copy:
+    src: /etc/fstab
+    dest: "/etc/fstab.back-{{ current_date.stdout }}"
+    remote_src: yes
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Comment out swap lines in /etc/fstab
+  lineinfile:
+    path: /etc/fstab
+    regexp: '^\s*.*\sswap\s.*$'
+    line: '#\g<0>'
+    backrefs: yes
