@@ -1,1 +1,2 @@
-kubernetes_version: "v1.32"
+kubernetes_version: "v1.35"
+calico_version: "v3.31.3"

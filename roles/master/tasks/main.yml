@@ -45,7 +45,7 @@
   register: calico_cni_status
 
 - name: Apply pod network addon (e.g., Calico)
-  command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/v3.29.1/manifests/calico.yaml
+  command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
   when: not calico_cni_status.stat.exists
