@@ -22,12 +22,6 @@
     mode: '0755'
   when: not kube_init_status.stat.exists
 
-- name: Fetch kubeconfig to local machine
-  fetch:
-    src: "{{ ansible_user_dir }}/.kube/config"
-    dest: "{{ ansible_user_dir }}/.kube/config"
-    flat: true
-
 - name: Copy admin.conf to .kube/config on remote
   copy:
     src: /etc/kubernetes/admin.conf
@@ -37,6 +31,12 @@
     group: "{{ ansible_user_gid }}"
     mode: '0600'
   when: not kube_init_status.stat.exists
+
+- name: Fetch kubeconfig to local machine
+  fetch:
+    src: "{{ ansible_user_dir }}/.kube/config"
+    dest: "{{ ansible_user_dir }}/.kube/config"
+    flat: true
 
 - name: Set KUBECONFIG environment variable
   lineinfile:
