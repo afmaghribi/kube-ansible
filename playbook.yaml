@@ -28,25 +28,59 @@
   roles:
     - app
 
+- name: Deploy App On Top Of Kubernetes
+  hosts: master
+  tasks:
+  - name: Ensure rsync exists
+    package:
+      name: rsync
+      state: present
+
 - name:  Fetch manifest directory from remote to local
   hosts: master
-  become: yes
   tasks:
+
     - name: Ensure rsync exists on remote
       package:
         name: rsync
         state: present
+
     - name: Ensure rsync exists on controller
       package:
         name: rsync
         state: present
       delegate_to: localhost
       become: false
+
+    - name: Ensure local manifest directory exists
+      file:
+        path: "{{ hostvars['localhost'].ansible_user_dir }}/manifest"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      become: false
+
     - name: Fetch manifest directory from remote to local
       ansible.builtin.synchronize:
         mode: pull
         src: "{{ manifest_dir }}/"
-        dest: "./artifacts/{{ manifest_dir }}/"
+        dest: "{{ manifest_dir }}/"
         recursive: yes
         rsync_path: "sudo rsync"
       delegate_to: localhost
+
+    - name: Ensure local .kube directory exists
+      file:
+        path: "{{ hostvars['localhost'].ansible_user_dir }}/.kube"
+        state: directory
+        mode: "0700"
+      delegate_to: localhost
+      become: false
+
+    - name: Fetch kubeconfig to local machine
+      fetch:
+        src: "/etc/kubernetes/admin.conf"
+        dest: "{{ hostvars['localhost'].ansible_user_dir }}/.kube/config"
+        flat: true
+      delegate_to: localhost
+      become: false

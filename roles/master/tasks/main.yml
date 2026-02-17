@@ -100,8 +100,18 @@
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
+- name: Ensure local .kube directory exists
+  file:
+    path: "{{ hostvars['localhost'].ansible_user_dir }}/.kube"
+    state: directory
+    mode: "0700"
+  delegate_to: localhost
+  become: false
+
 - name: Fetch kubeconfig to local machine
   fetch:
-    src: "{{ ansible_user_dir }}/.kube/config"
-    dest: "{{ ansible_user_dir }}/.kube/config"
+    src: "/etc/kubernetes/admin.conf"
+    dest: "{{ hostvars['localhost'].ansible_user_dir }}/.kube/config"
     flat: true
+  delegate_to: localhost
+  become: false
