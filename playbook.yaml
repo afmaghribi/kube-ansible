@@ -27,3 +27,26 @@
   become: yes
   roles:
     - app
+
+- name:  Fetch manifest directory from remote to local
+  hosts: master
+  become: yes
+  tasks:
+    - name: Ensure rsync exists on remote
+      package:
+        name: rsync
+        state: present
+    - name: Ensure rsync exists on controller
+      package:
+        name: rsync
+        state: present
+      delegate_to: localhost
+      become: false
+    - name: Fetch manifest directory from remote to local
+      ansible.builtin.synchronize:
+        mode: pull
+        src: "{{ manifest_dir }}/"
+        dest: "./artifacts/{{ manifest_dir }}/"
+        recursive: yes
+        rsync_path: "sudo rsync"
+      delegate_to: localhost

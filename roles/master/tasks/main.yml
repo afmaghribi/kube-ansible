@@ -6,7 +6,7 @@
   register: kube_init_status
 
 - name: Initialize Kubernetes control plane (if not already initialized)
-  command: kubeadm init --pod-network-cidr=192.168.0.0/16
+  command: kubeadm init --pod-network-cidr=192.168.0.0/16 --apiserver-advertise-address={{ hostvars[groups['master'][0]].ansible_host }}
   when: not kube_init_status.stat.exists
   register: kubeadm_init_output
 
@@ -22,7 +22,13 @@
     mode: '0755'
   when: not kube_init_status.stat.exists
 
-- name: Copy admin.conf to .kube/config
+- name: Fetch kubeconfig to local machine
+  fetch:
+    src: "{{ ansible_user_dir }}/.kube/config"
+    dest: "{{ ansible_user_dir }}/.kube/config"
+    flat: true
+
+- name: Copy admin.conf to .kube/config on remote
   copy:
     src: /etc/kubernetes/admin.conf
     dest: "{{ ansible_user_dir }}/.kube/config"

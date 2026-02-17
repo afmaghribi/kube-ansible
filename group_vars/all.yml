@@ -1,3 +1,5 @@
+master_ip: "67.67.67.21"
+
 kubernetes_version: "v1.35"
 calico_version: "v3.31.3"
 local_path_version: "v0.0.34"
