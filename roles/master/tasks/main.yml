@@ -96,29 +96,26 @@
 
 - name: Patch StorageClass to be default
   set_fact:
-    local_path_yaml: >-
+    local_path_yaml_patched: "{{ local_path_yaml_patched | default([]) + [patched_item] }}"
+  vars:
+    patched_item: >-
       {{
-        local_path_yaml | map(
-          'combine',
-          (
-            (item.kind == 'StorageClass')
-            | ternary(
-                {
-                  'metadata': {
-                    'annotations': {
-                      'storageclass.kubernetes.io/is-default-class': "true"
-                    }
+        item.kind == 'StorageClass'
+        | ternary(
+            item | combine(
+              {
+                'metadata': {
+                  'annotations': {
+                    'storageclass.kubernetes.io/is-default-class': "true"
                   }
-                },
-                {}
-              )
-          ),
-          recursive=True
-        ) | list
+                }
+              },
+              recursive=True
+            ),
+            item
+          )
       }}
   loop: "{{ local_path_yaml }}"
-  loop_control:
-    loop_var: item
 
 - name: Write patched manifest back
   ansible.builtin.copy:
