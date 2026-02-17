@@ -20,3 +20,10 @@
   become: yes
   roles:
     - worker
+
+- name: Deploy App On Top Of Kubernetes
+  hosts: master
+  user: ubuntu
+  become: yes
+  roles:
+    - app

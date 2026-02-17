@@ -90,7 +90,7 @@
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- name: Render vmcluster Helm values
+- name: Render local-path-storage default
   template:
     src: local-path-storage-default.yaml.j2
     dest: "{{ manifest_dir }}/local-path-storage-default.yaml"
@@ -154,6 +154,3 @@
   command: kubectl apply -f {{ manifest_dir }}/ingress-nginx.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
-
-- name: Install Helm App
-  include_tasks: helm_main.yml

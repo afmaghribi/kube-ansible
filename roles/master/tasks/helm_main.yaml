@@ -1,4 +1,0 @@
-- include_tasks: install_helm.yml
-- include_tasks: helm_vmcluster.yml
-- include_tasks: helm_vmagent.yml
-- include_tasks: helm_grafana.yml
