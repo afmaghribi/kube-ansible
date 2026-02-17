@@ -149,38 +149,21 @@
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- name: Create MetalLB IPAddressPool manifest
-  copy:
+- name: Render MetalLB IPAddressPool manifest
+  template:
+    src: metallb-ip-pool.yaml.j2
     dest: "{{ manifest_dir }}/metallb-ip-pool.yaml"
-  content: |
-    apiVersion: metallb.io/v1beta1
-    kind: IPAddressPool
-    metadata:
-      name: dhcp-external
-      namespace: metallb-system
-    spec:
-      addresses:
-  {% for range in metallb_ip_ranges %}
-      - {{ range }}
-  {% endfor %}
+    mode: "0644"
 
 - name: Apply MetalLB IPAddressPool
   command: kubectl apply -f {{ manifest_dir }}/metallb-ip-pool.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- name: Create MetalLB L2Advertisement manifest
-  copy:
+- name: Render MetalLB L2Advertisement manifest
+  template:
+    src: metallb-l2advert.yaml.j2
     dest: "{{ manifest_dir }}/metallb-l2advert.yaml"
-    content: |
-      apiVersion: metallb.io/v1beta1
-      kind: L2Advertisement
-      metadata:
-        name: dhcp-external-advert
-        namespace: metallb-system
-      spec:
-        ipAddressPools:
-        - dhcp-external
 
 - name: Apply MetalLB L2Advertisement
   command: kubectl apply -f {{ manifest_dir }}/metallb-l2advert.yaml

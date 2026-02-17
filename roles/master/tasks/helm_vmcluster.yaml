@@ -1,21 +1,7 @@
-- name: Create vmcluster Helm values
-  copy:
+- name: Render vmcluster Helm values
+  template:
+    src: vmcluster-values.yaml.j2
     dest: "{{ manifest_dir }}/vmcluster-values.yaml"
-    content: |
-      vmselect:
-        podAnnotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "8481"
-
-      vminsert:
-        podAnnotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "8480"
-
-      vmstorage:
-        podAnnotations:
-          prometheus.io/scrape: "true"
-          prometheus.io/port: "8482"
 
 - name: Deploy vmcluster
   shell: >

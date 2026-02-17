@@ -19,6 +19,7 @@
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- copy:
+- name: Save vmagent helm output
+  copy:
     dest: "{{ manifest_dir }}/vmagent-helm-output.txt"
     content: "{{ vmagent_helm_output.stdout }}"
