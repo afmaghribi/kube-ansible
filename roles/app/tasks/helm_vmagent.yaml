@@ -7,7 +7,7 @@
   replace:
     path: "{{ manifest_dir }}/vmagent-values.yaml"
     regexp: 'url:.*'
-    replace: 'url: "{{ vminsert_url }}"'
+    replace: 'url: "{{ vminsert_url }}:8480/insert/0/prometheus/"'
 
 - name: Deploy vmagent
   shell: >

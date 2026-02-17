@@ -19,6 +19,10 @@
     dest: "{{ manifest_dir }}/vmcluster-helm-output.txt"
     content: "{{ vmcluster_helm_output.stdout }}"
 
-- name: Extract vminsert URL
+- name: Extract and normalize vminsert URL
   set_fact:
-    vminsert_url: "{{ vmcluster_helm_output.stdout | regex_search('http://[^ ]+:8480') }}"
+    vminsert_url: >-
+      {{ vmcluster_helm_output.stdout
+         | regex_search('http://[^ ]+')
+         | regex_replace('\.:(\d+)$', '')
+      }}

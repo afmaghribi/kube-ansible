@@ -5,7 +5,7 @@ datasources:
       - name: victoriametrics
         type: prometheus
         orgId: 1
-        url: {{ vminsert_url }}
+        url: {{ vminsert_url }}:8481/select/0/prometheus/
         access: proxy
         isDefault: true
         editable: true
