@@ -23,6 +23,6 @@
   set_fact:
     vminsert_url: >-
       {{ vmcluster_helm_output.stdout
-         | regex_search('http://[^ ]+')
+         | regex_search('http://[^ ]+:8480')
          | regex_replace('\.:(\d+)$', '')
       }}
