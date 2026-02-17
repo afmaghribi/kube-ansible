@@ -7,7 +7,7 @@
     - nodes
 
 - name: Bootstrap and initilize kubernetes cluster
-  hosts: kube-master
+  hosts: master
   user: ubuntu
   become: yes
   roles:
