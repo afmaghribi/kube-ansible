@@ -3,7 +3,7 @@ calico_version: "v3.31.3"
 local_path_version: "v0.0.34"
 metallb_version: "v0.14.3"
 
-manifest_dir: "./manifest"
+manifest_dir: "/opt/manifest"
 
 helm_version: "v3.14.2"
 helm_arch: "linux-amd64"

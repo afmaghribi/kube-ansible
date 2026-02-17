@@ -95,13 +95,13 @@
     local_path_yaml: "{{ local_path_yaml_raw.content | b64decode | from_yaml_all | list }}"
 
 - name: Patch StorageClass to be default
-  ansible.builtin.set_fact:
+  set_fact:
     local_path_yaml: >-
       {{
         local_path_yaml | map(
           'combine',
           (
-            item.kind == 'StorageClass'
+            (item.kind == 'StorageClass')
             | ternary(
                 {
                   'metadata': {
@@ -180,7 +180,6 @@
   command: kubectl apply -f {{ manifest_dir }}/ingress-nginx.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
-
 
 - name: Install Helm App
   include_tasks: helm_main.yml
