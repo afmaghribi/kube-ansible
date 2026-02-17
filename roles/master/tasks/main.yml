@@ -85,45 +85,18 @@
     dest: "{{ manifest_dir }}/local-path-storage.yaml"
     mode: '0644'
 
-- name: Read manifest
-  ansible.builtin.slurp:
-    src: "{{ manifest_dir }}/local-path-storage.yaml"
-  register: local_path_yaml_raw
+- name: Apply local-path-storage manifest
+  command: kubectl apply -f {{ manifest_dir }}/local-path-storage.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
-- name: Convert manifest to list
-  ansible.builtin.set_fact:
-    local_path_yaml: "{{ local_path_yaml_raw.content | b64decode | from_yaml_all | list }}"
+- name: Render vmcluster Helm values
+  template:
+    src: local-path-storage-default.yaml.j2
+    dest: "{{ manifest_dir }}/local-path-storage-default.yaml"
 
-- name: Patch StorageClass to be default
-  set_fact:
-    local_path_yaml_patched: "{{ local_path_yaml_patched | default([]) + [patched_item] }}"
-  vars:
-    patched_item: >-
-      {{
-        item.kind == 'StorageClass'
-        | ternary(
-            item | combine(
-              {
-                'metadata': {
-                  'annotations': {
-                    'storageclass.kubernetes.io/is-default-class': "true"
-                  }
-                }
-              },
-              recursive=True
-            ),
-            item
-          )
-      }}
-  loop: "{{ local_path_yaml }}"
-
-- name: Write patched manifest back
-  ansible.builtin.copy:
-    dest: "{{ manifest_dir }}/local-path-storage-patched.yaml"
-    content: "{{ local_path_yaml | to_nice_yaml }}"
-
-- name: Apply manifest to Kubernetes
-  command: kubectl apply -f {{ manifest_dir }}/local-path-storage-patched.yaml
+- name: Apply manifest local-path-storage-default to Kubernetes
+  command: kubectl apply -f {{ manifest_dir }}/local-path-storage-default.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
