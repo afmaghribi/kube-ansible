@@ -1,0 +1,38 @@
+- name: Create vmcluster Helm values
+  copy:
+    dest: "{{ manifest_dir }}/vmcluster-values.yaml"
+    content: |
+      vmselect:
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8481"
+
+      vminsert:
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8480"
+
+      vmstorage:
+        podAnnotations:
+          prometheus.io/scrape: "true"
+          prometheus.io/port: "8482"
+
+- name: Deploy vmcluster
+  shell: >
+    helm upgrade --install vmcluster vm/victoria-metrics-cluster
+    --namespace {{ monitoring_namespace }}
+    --create-namespace
+    --version {{ vmcluster_chart_version }}
+    -f {{ manifest_dir }}/vmcluster-values.yaml
+  register: vmcluster_helm_output
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Save vmcluster helm output
+  copy:
+    dest: "{{ manifest_dir }}/vmcluster-helm-output.txt"
+    content: "{{ vmcluster_helm_output.stdout }}"
+
+- name: Extract vminsert URL
+  set_fact:
+    vminsert_url: "{{ vmcluster_helm_output.stdout | regex_search('http://[^ ]+:8480') }}"

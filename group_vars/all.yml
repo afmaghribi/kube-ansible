@@ -1,2 +1,21 @@
 kubernetes_version: "v1.35"
 calico_version: "v3.31.3"
+local_path_version: "v0.0.34"
+metallb_version: "v0.14.3"
+
+manifest_dir: "./manifest"
+
+helm_version: "v3.14.2"
+helm_arch: "linux-amd64"
+
+metallb_ip_ranges:
+  - "67.67.67.100-67.67.67.110"
+
+ingress_nginx_version: "controller-v1.9.6"
+
+vmcluster_chart_version: "0.35.0"
+vmagent_chart_version: "0.32.0"
+grafana_chart_version: "11.1.7"
+
+monitoring_namespace: monitoring
+grafana_lb_ip: 67.67.67.100

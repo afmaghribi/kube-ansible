@@ -6,7 +6,7 @@
   register: kube_init_status
 
 - name: Initialize Kubernetes control plane (if not already initialized)
-  command: kubeadm init
+  command: kubeadm init --pod-network-cidr=192.168.0.0/16
   when: not kube_init_status.stat.exists
   register: kubeadm_init_output
 
@@ -39,13 +39,165 @@
     create: yes
   when: not kube_init_status.stat.exists
 
+- name: Wait for API server
+  command: kubectl get nodes
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  register: api_ready
+  retries: 20
+  delay: 15
+  until: api_ready.rc == 0
+
 - name: Check if Kubernetes is already initialized
   stat:
     path: /etc/cni/net.d/10-calico.conflist
   register: calico_cni_status
 
+- name: Set kubernetes CNI (e.g., Calico)
+  set_fact:
+    cni_manifest_url: "https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml"
+
+- name: Ensure manifest directory exists
+  file:
+    path: "{{ manifest_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Download kubernetes CNI manifest
+  ansible.builtin.get_url:
+    url: "{{ cni_manifest_url }}"
+    dest: "{{ manifest_dir }}/calico.yaml"
+    mode: '0644'
+
 - name: Apply pod network addon (e.g., Calico)
-  command: kubectl apply -f https://raw.githubusercontent.com/projectcalico/calico/{{ calico_version }}/manifests/calico.yaml
+  command: kubectl apply -f {{ manifest_dir }}/calico.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
   when: not calico_cni_status.stat.exists
+
+- name: Set local-path manifest URL
+  set_fact:
+    local_path_manifest_url: "https://raw.githubusercontent.com/rancher/local-path-provisioner/{{ local_path_version }}/deploy/local-path-storage.yaml"
+
+- name: Download local-path-storage manifest
+  ansible.builtin.get_url:
+    url: "{{ local_path_manifest_url }}"
+    dest: "{{ manifest_dir }}/local-path-storage.yaml"
+    mode: '0644'
+
+- name: Read manifest
+  ansible.builtin.slurp:
+    src: "{{ manifest_dir }}/local-path-storage.yaml"
+  register: local_path_yaml_raw
+
+- name: Convert manifest to list
+  ansible.builtin.set_fact:
+    local_path_yaml: "{{ local_path_yaml_raw.content | b64decode | from_yaml_all | list }}"
+
+- name: Patch StorageClass to be default
+  ansible.builtin.set_fact:
+    local_path_yaml: >-
+      {{
+        local_path_yaml | map(
+          'combine',
+          (
+            item.kind == 'StorageClass'
+            | ternary(
+                {
+                  'metadata': {
+                    'annotations': {
+                      'storageclass.kubernetes.io/is-default-class': "true"
+                    }
+                  }
+                },
+                {}
+              )
+          ),
+          recursive=True
+        ) | list
+      }}
+  loop: "{{ local_path_yaml }}"
+  loop_control:
+    loop_var: item
+
+- name: Write patched manifest back
+  ansible.builtin.copy:
+    dest: "{{ manifest_dir }}/local-path-storage-patched.yaml"
+    content: "{{ local_path_yaml | to_nice_yaml }}"
+
+- name: Apply manifest to Kubernetes
+  command: kubectl apply -f {{ manifest_dir }}/local-path-storage-patched.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Enable strictARP in kube-proxy
+  shell: |
+    kubectl get configmap kube-proxy -n kube-system -o yaml \
+    | sed -e "s/strictARP: false/strictARP: true/" \
+    | kubectl apply -f - -n kube-system
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Download MetalLB manifest
+  get_url:
+    url: "https://raw.githubusercontent.com/metallb/metallb/{{ metallb_version }}/config/manifests/metallb-native.yaml"
+    dest: "{{ manifest_dir }}/metallb-native.yaml"
+    mode: "0644"
+
+- name: Apply MetalLB manifest
+  command: kubectl apply -f {{ manifest_dir }}/metallb-native.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Create MetalLB IPAddressPool manifest
+  copy:
+    dest: "{{ manifest_dir }}/metallb-ip-pool.yaml"
+  content: |
+    apiVersion: metallb.io/v1beta1
+    kind: IPAddressPool
+    metadata:
+      name: dhcp-external
+      namespace: metallb-system
+    spec:
+      addresses:
+  {% for range in metallb_ip_ranges %}
+      - {{ range }}
+  {% endfor %}
+
+- name: Apply MetalLB IPAddressPool
+  command: kubectl apply -f {{ manifest_dir }}/metallb-ip-pool.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Create MetalLB L2Advertisement manifest
+  copy:
+    dest: "{{ manifest_dir }}/metallb-l2advert.yaml"
+    content: |
+      apiVersion: metallb.io/v1beta1
+      kind: L2Advertisement
+      metadata:
+        name: dhcp-external-advert
+        namespace: metallb-system
+      spec:
+        ipAddressPools:
+        - dhcp-external
+
+- name: Apply MetalLB L2Advertisement
+  command: kubectl apply -f {{ manifest_dir }}/metallb-l2advert.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Download ingress-nginx manifest
+  get_url:
+    url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/{{ ingress_nginx_version }}/deploy/static/provider/cloud/deploy.yaml"
+    dest: "{{ manifest_dir }}/ingress-nginx.yaml"
+    mode: "0644"
+
+- name: Apply ingress-nginx
+  command: kubectl apply -f {{ manifest_dir }}/ingress-nginx.yaml
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+
+- name: Install Helm App
+  include_tasks: helm_main.yml

@@ -1,0 +1,53 @@
+- name: Create Grafana Helm values
+  copy:
+    dest: "{{ manifest_dir }}/grafana-values.yaml"
+    content: |
+      datasources:
+        datasources.yaml:
+          apiVersion: 1
+          datasources:
+            - name: victoriametrics
+              type: prometheus
+              orgId: 1
+              url: "{{ vminsert_url }}"
+              access: proxy
+              isDefault: true
+              editable: true
+
+      service:
+        type: LoadBalancer
+        loadBalancerIP: {{ grafana_lb_ip }}
+
+      dashboardProviders:
+        dashboardproviders.yaml:
+          apiVersion: 1
+          providers:
+          - name: default
+            orgId: 1
+            folder: ""
+            type: file
+            options:
+              path: /var/lib/grafana/dashboards/default
+
+      dashboards:
+        default:
+          victoriametrics:
+            gnetId: 10229
+            datasource: victoriametrics
+          kubernetes:
+            gnetId: 14205
+            datasource: victoriametrics
+
+- name: Deploy Grafana
+  shell: >
+    helm upgrade --install grafana grafana/grafana
+    --namespace {{ monitoring_namespace }}
+    --version {{ grafana_chart_version }}
+    -f {{ manifest_dir }}/grafana-values.yaml
+  register: grafana_helm_output
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- copy:
+    dest: "{{ manifest_dir }}/grafana-helm-output.txt"
+    content: "{{ grafana_helm_output.stdout }}"

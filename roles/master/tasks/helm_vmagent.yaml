@@ -1,0 +1,24 @@
+- name: Download vmagent example values
+  get_url:
+    url: https://docs.victoriametrics.com/guides/examples/guide-vmcluster-vmagent-values.yaml
+    dest: "{{ manifest_dir }}/vmagent-values.yaml"
+
+- name: Replace remoteWrite URL
+  replace:
+    path: "{{ manifest_dir }}/vmagent-values.yaml"
+    regexp: 'url:.*'
+    replace: 'url: "{{ vminsert_url }}"'
+
+- name: Deploy vmagent
+  shell: >
+    helm upgrade --install vmagent vm/victoria-metrics-agent
+    --namespace {{ monitoring_namespace }}
+    --version {{ vmagent_chart_version }}
+    -f {{ manifest_dir }}/vmagent-values.yaml
+  register: vmagent_helm_output
+  environment:
+    KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- copy:
+    dest: "{{ manifest_dir }}/vmagent-helm-output.txt"
+    content: "{{ vmagent_helm_output.stdout }}"
