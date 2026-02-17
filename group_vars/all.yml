@@ -20,7 +20,7 @@ ingress_nginx_version: "controller-v1.9.6"
 
 vmcluster_chart_version: "0.35.0"
 vmagent_chart_version: "0.32.0"
-grafana_chart_version: "11.1.7"
+grafana_chart_version: "10.5.15"
 
 monitoring_namespace: monitoring
 grafana_lb_ip: 67.67.67.101

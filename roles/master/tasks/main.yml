@@ -32,12 +32,6 @@
     mode: '0600'
   when: not kube_init_status.stat.exists
 
-- name: Fetch kubeconfig to local machine
-  fetch:
-    src: "{{ ansible_user_dir }}/.kube/config"
-    dest: "{{ ansible_user_dir }}/.kube/config"
-    flat: true
-
 - name: Set KUBECONFIG environment variable
   lineinfile:
     path: "{{ ansible_user_dir }}/.bashrc"
@@ -105,3 +99,9 @@
   command: kubectl apply -f {{ manifest_dir }}/local-path-storage-default.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+
+- name: Fetch kubeconfig to local machine
+  fetch:
+    src: "{{ ansible_user_dir }}/.kube/config"
+    dest: "{{ ansible_user_dir }}/.kube/config"
+    flat: true
