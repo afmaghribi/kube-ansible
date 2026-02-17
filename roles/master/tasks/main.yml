@@ -99,19 +99,3 @@
   command: kubectl apply -f {{ manifest_dir }}/local-path-storage-default.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
-
-- name: Ensure local .kube directory exists
-  file:
-    path: "{{ hostvars['localhost'].ansible_user_dir }}/.kube"
-    state: directory
-    mode: "0700"
-  delegate_to: localhost
-  become: false
-
-- name: Fetch kubeconfig to local machine
-  fetch:
-    src: "/etc/kubernetes/admin.conf"
-    dest: "{{ hostvars['localhost'].ansible_user_dir }}/.kube/config"
-    flat: true
-  delegate_to: localhost
-  become: false
