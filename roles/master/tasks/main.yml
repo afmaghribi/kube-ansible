@@ -129,6 +129,10 @@
   command: kubectl apply -f {{ manifest_dir }}/metallb-ip-pool.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  register: metallb_ready
+  retries: 20
+  delay: 15
+  until: metallb_ready.rc == 0
 
 - name: Render MetalLB L2Advertisement manifest
   template:
