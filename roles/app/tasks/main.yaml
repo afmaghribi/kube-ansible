@@ -54,7 +54,7 @@
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
 
 
-- include_tasks: install_helm.yml
-- include_tasks: helm_vmcluster.yml
-- include_tasks: helm_vmagent.yml
-- include_tasks: helm_grafana.yml
+- include_tasks: install_helm.yaml
+- include_tasks: helm_vmcluster.yaml
+- include_tasks: helm_vmagent.yaml
+- include_tasks: helm_grafana.yaml

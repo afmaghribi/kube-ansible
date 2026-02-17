@@ -21,4 +21,4 @@ vmagent_chart_version: "0.32.0"
 grafana_chart_version: "11.1.7"
 
 monitoring_namespace: monitoring
-grafana_lb_ip: 67.67.67.100
+grafana_lb_ip: 67.67.67.101
