@@ -62,11 +62,11 @@
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
   tags: ["app"]
 
-
 - include_tasks: install_helm.yaml
-  tags: ["app"]
+  tags: ["helm"]
 - include_tasks: helm_vmcluster.yaml
-  tags: ["app"]
+  tags: ["vmcluster"]
 - include_tasks: helm_vmagent.yaml
-  tags: ["app"]
+  tags: ["vmagent"]
 - include_tasks: helm_grafana.yaml
+  tags: ["grafana"]
