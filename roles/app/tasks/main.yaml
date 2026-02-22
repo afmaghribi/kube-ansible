@@ -5,23 +5,27 @@
     | kubectl apply -f - -n kube-system
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  tags: ["app"]
 
 - name: Download MetalLB manifest
   get_url:
     url: "https://raw.githubusercontent.com/metallb/metallb/{{ metallb_version }}/config/manifests/metallb-native.yaml"
     dest: "{{ manifest_dir }}/metallb-native.yaml"
     mode: "0644"
+  tags: ["app"]
 
 - name: Apply MetalLB manifest
   command: kubectl apply -f {{ manifest_dir }}/metallb-native.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  tags: ["app"]
 
 - name: Render MetalLB IPAddressPool manifest
   template:
     src: metallb-ip-pool.yaml.j2
     dest: "{{ manifest_dir }}/metallb-ip-pool.yaml"
     mode: "0644"
+  tags: ["app"]
 
 - name: Apply MetalLB IPAddressPool
   command: kubectl apply -f {{ manifest_dir }}/metallb-ip-pool.yaml
@@ -31,30 +35,38 @@
   retries: 20
   delay: 15
   until: metallb_ready.rc == 0
+  tags: ["app"]
 
 - name: Render MetalLB L2Advertisement manifest
   template:
     src: metallb-l2advert.yaml.j2
     dest: "{{ manifest_dir }}/metallb-l2advert.yaml"
+  tags: ["app"]
 
 - name: Apply MetalLB L2Advertisement
   command: kubectl apply -f {{ manifest_dir }}/metallb-l2advert.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  tags: ["app"]
 
 - name: Download ingress-nginx manifest
   get_url:
     url: "https://raw.githubusercontent.com/kubernetes/ingress-nginx/{{ ingress_nginx_version }}/deploy/static/provider/cloud/deploy.yaml"
     dest: "{{ manifest_dir }}/ingress-nginx.yaml"
     mode: "0644"
+  tags: ["app"]
 
 - name: Apply ingress-nginx
   command: kubectl apply -f {{ manifest_dir }}/ingress-nginx.yaml
   environment:
     KUBECONFIG: "{{ ansible_user_dir }}/.kube/config"
+  tags: ["app"]
 
 
 - include_tasks: install_helm.yaml
+  tags: ["app"]
 - include_tasks: helm_vmcluster.yaml
+  tags: ["app"]
 - include_tasks: helm_vmagent.yaml
+  tags: ["app"]
 - include_tasks: helm_grafana.yaml
