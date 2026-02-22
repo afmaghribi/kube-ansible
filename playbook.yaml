@@ -28,18 +28,10 @@
   roles:
     - app
 
-- name: Deploy App On Top Of Kubernetes
+- name: Fetch manifest directory from remote to local
   hosts: master
+  user: ubuntu
   tasks:
-  - name: Ensure rsync exists
-    package:
-      name: rsync
-      state: present
-
-- name:  Fetch manifest directory from remote to local
-  hosts: master
-  tasks:
-
     - name: Ensure rsync exists on remote
       package:
         name: rsync
