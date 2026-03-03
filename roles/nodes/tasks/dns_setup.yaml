@@ -1,0 +1,14 @@
+---
+- name: Configure DNS in systemd-resolved
+  ansible.builtin.ini_file:
+    path: /etc/systemd/resolved.conf
+    section: Resolve
+    option: DNS
+    value: 8.8.8.8
+    no_extra_spaces: yes
+
+- name: Restart systemd-resolved service
+  ansible.builtin.systemd:
+    name: systemd-resolved
+    state: restarted
+    enabled: yes

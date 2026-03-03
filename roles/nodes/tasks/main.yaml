@@ -15,5 +15,9 @@
   include_tasks: containerd_setup.yml
   tags: ["nodes"]
 
+- name: Setup DNS configuration
+  include_tasks: dns_setup.yml
+  tags: ["nodes"]
+
 - name: Install kubernetes packages
   include_tasks: kubernetes_setup.yml
