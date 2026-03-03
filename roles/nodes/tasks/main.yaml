@@ -1,23 +1,23 @@
 ---
 - name: Update and upgrade all packages
-  include_tasks: update_packages.yml
+  include_tasks: update_packages.yaml
   tags: ["nodes"]
 
 - name: Disable swap
-  include_tasks: disable_swap.yml
+  include_tasks: disable_swap.yaml
   tags: ["nodes"]
 
 - name: Enable kernel module and configs
-  include_tasks: kernel_config.yml
+  include_tasks: kernel_config.yaml
   tags: ["nodes"]
 
 - name: Install containerd runtime
-  include_tasks: containerd_setup.yml
+  include_tasks: containerd_setup.yaml
   tags: ["nodes"]
 
 - name: Setup DNS configuration
-  include_tasks: dns_setup.yml
+  include_tasks: dns_setup.yaml
   tags: ["nodes"]
 
 - name: Install kubernetes packages
-  include_tasks: kubernetes_setup.yml
+  include_tasks: kubernetes_setup.yaml
